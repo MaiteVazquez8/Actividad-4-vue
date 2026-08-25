@@ -27,17 +27,24 @@ const evoluciones = [
 ]
 
 const evolucionActual = computed(() => evoluciones.find(({ id }) => id === evolucionSeleccionada.value))
+
+const evolucionar = () => {
+  const indiceActual = evoluciones.findIndex(({ id }) => id === evolucionSeleccionada.value)
+  const siguienteIndice = (indiceActual + 1) % evoluciones.length
+  evolucionSeleccionada.value = evoluciones[siguienteIndice].id
+}
 </script>
 
 <template>
-  <div class="pantalla-juego" :class="{ 'game-over-screen': esGameOver }">
+  <div class="pantalla-juego" :class="{ 'game-over-screen': esGameOver }" :style="{ '--color-evolucion': evolucionActual.color }">
     
     <div class="caja-items">
       <h2><span class="bloque-interrogacion">●</span> Pokédex de Eevee</h2>
       
       <div class="grupo-botones">
         <p>Pokemon elegido:</p>
-        <button class="btn-eevee seleccionado">Eevee</button>
+        <button class="btn-eevee" :class="{ seleccionado: evolucionSeleccionada === 'eevee' }" @click="evolucionSeleccionada = 'eevee'">Eevee</button>
+        <button class="btn-evolucionar" @click="evolucionar">Evolucionar</button>
       </div>
 
       <div class="grupo-botones">
@@ -90,7 +97,7 @@ const evolucionActual = computed(() => evoluciones.find(({ id }) => id === evolu
   flex-wrap: wrap;
   gap: 30px;
   padding: 30px;
-  background: linear-gradient(135deg, #f7f1d5 0%, #d8efc5 48%, #8bcf9b 100%);
+  background: linear-gradient(135deg, var(--color-evolucion) 0%, #ffffff 55%, var(--color-evolucion) 100%);
   font-family: 'Courier New', Courier, monospace;
   min-height: 450px;
   border-radius: 15px;
@@ -99,7 +106,7 @@ const evolucionActual = computed(() => evoluciones.find(({ id }) => id === evolu
 
 
 .game-over-screen {
-  background-color: #000000 !important;
+  background: #000000 !important;
 }
 
 .caja-items {
@@ -137,6 +144,11 @@ const evolucionActual = computed(() => evoluciones.find(({ id }) => id === evolu
 .seleccionado {
   cursor: default;
   box-shadow: 0 0 0 3px #111;
+}
+
+.btn-evolucionar {
+  background: #d9292f !important;
+  color: white !important;
 }
 
 .grupo-botones p {
