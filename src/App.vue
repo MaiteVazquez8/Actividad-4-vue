@@ -9,10 +9,13 @@ import sylveonImagen from './assets/Sylveon.webp'
 import flareonImagen from './assets/flareon.webp'
 import umbreonImagen from './assets/umbreon.png'
 import leafeonImagen from './assets/Leafeon.webp'
+import eeveelutionsImagen from './assets/eeveelutions.webp'
 
 const esGameOver = ref(false)
 const esBrillante = ref(false)
 const evolucionSeleccionada = ref('eevee')
+const pulsacionesEvolucionar = ref(0)
+const secretoDesbloqueado = ref(false)
 
 const evoluciones = [
   { id: 'eevee', nombre: 'Eevee', tipo: 'Normal', color: '#9b7653', descripcion: 'Un Pokemon adaptable que puede evolucionar de muchas formas.', imagen: eeveeImagen },
@@ -29,37 +32,48 @@ const evoluciones = [
 const evolucionActual = computed(() => evoluciones.find(({ id }) => id === evolucionSeleccionada.value))
 
 const evolucionar = () => {
+  secretoDesbloqueado.value = false
   const indiceActual = evoluciones.findIndex(({ id }) => id === evolucionSeleccionada.value)
   const siguienteIndice = (indiceActual + 1) % evoluciones.length
   evolucionSeleccionada.value = evoluciones[siguienteIndice].id
+  pulsacionesEvolucionar.value++
+  if (pulsacionesEvolucionar.value >= 100) {
+    secretoDesbloqueado.value = true
+    pulsacionesEvolucionar.value = 0
+  }
+}
+
+const seleccionarEvolucion = (id) => {
+  secretoDesbloqueado.value = false
+  evolucionSeleccionada.value = id
 }
 </script>
 
 <template>
-  <div class="pantalla-juego" :class="{ 'game-over-screen': esGameOver }" :style="{ '--color-evolucion': evolucionActual.color }">
+  <div class="pantalla-juego" :class="{ 'game-over-screen': esGameOver, 'modo-secreto': secretoDesbloqueado }" :style="{ '--color-evolucion': evolucionActual.color }">
     
     <div class="caja-items">
       <h2><span class="bloque-interrogacion">●</span> Pokédex de Eevee</h2>
       
       <div class="grupo-botones">
         <p>Pokemon elegido:</p>
-        <button class="btn-eevee" :class="{ seleccionado: evolucionSeleccionada === 'eevee' }" @click="evolucionSeleccionada = 'eevee'">Eevee</button>
+        <button class="btn-eevee" :class="{ seleccionado: evolucionSeleccionada === 'eevee' }" @click="seleccionarEvolucion('eevee')">Eevee</button>
         <button class="btn-evolucionar" @click="evolucionar">Evolucionar</button>
       </div>
 
       <div class="grupo-botones">
         <p>Elegir evolución por tipo:</p>
-        <button v-for="evolucion in evoluciones.slice(1)" :key="evolucion.id" :style="{ '--color-tipo': evolucion.color }" :class="{ activo: evolucion.id === evolucionSeleccionada }" @click="evolucionSeleccionada = evolucion.id">
+        <button v-for="evolucion in evoluciones.slice(1)" :key="evolucion.id" :style="{ '--color-tipo': evolucion.color }" :class="{ activo: evolucion.id === evolucionSeleccionada }" @click="seleccionarEvolucion(evolucion.id)">
           {{ evolucion.tipo }}
         </button>
       </div>
 
       <div class="grupo-botones checkbox-container">
         <label>
-          <input type="checkbox" v-model="esGameOver" /> 💀 Activar GAME OVER
+          <input type="checkbox" v-model="esGameOver" /> Modo game over
         </label>
         <label>
-          <input type="checkbox" v-model="esBrillante" /> ✨ Activar brillo
+          <input type="checkbox" v-model="esBrillante" /> Brillar
         </label>
       </div>
     </div>
@@ -70,19 +84,20 @@ const evolucionar = () => {
       <div class="interfaz-personaje">
 
 <div class="marcador">
-  <span class="texto-retro">{{ evolucionActual.nombre.toUpperCase() }}</span>
-  <span class="texto-retro">TIPO: {{ evolucionActual.tipo.toUpperCase() }}</span>
+  <span class="texto-retro">{{ secretoDesbloqueado ? 'EEVEELUTIONS' : evolucionActual.nombre.toUpperCase() }}</span>
+  <span class="texto-retro">{{ secretoDesbloqueado ? 'SECRETO' : `TIPO: ${evolucionActual.tipo.toUpperCase()}` }}</span>
 </div>
 
-    <div class="contenedor-sprite" :class="{ 'estado-gameover': esGameOver, 'estado-brillante': esBrillante }">
-      <img :src="evolucionActual.imagen" :alt="evolucionActual.nombre" class="sprite" />
+    <div class="contenedor-sprite" :class="{ 'estado-gameover': esGameOver, 'estado-brillante': esBrillante || secretoDesbloqueado }">
+      <img :src="secretoDesbloqueado ? eeveelutionsImagen : evolucionActual.imagen" :alt="secretoDesbloqueado ? 'Eeveelutions' : evolucionActual.nombre" class="sprite" :class="{ 'sprite-secreto': secretoDesbloqueado }" />
       <div v-if="esGameOver" class="cartel-gameover">GAME OVER</div>
+      <div v-if="secretoDesbloqueado" class="mensaje-secreto">¡Imagen secreta desbloqueada!</div>
 
 </div>
 
         <div class="inventario-visual">
-          <p>Información de la evolución:</p>
-          <span class="etiqueta-item">{{ evolucionActual.descripcion }}</span>
+          <p>{{ secretoDesbloqueado ? 'Recompensa especial:' : 'Información de la evolución:' }}</p>
+          <span class="etiqueta-item">{{ secretoDesbloqueado ? 'Has reunido a todas las Eeveelutions.' : evolucionActual.descripcion }}</span>
         </div>
       </div>
 
@@ -109,12 +124,21 @@ const evolucionar = () => {
   background: #000000 !important;
 }
 
+.modo-secreto {
+  background: #000000 !important;
+  border: 5px solid #d4af37;
+}
+
 .caja-items {
   background: rgba(255, 255, 255, 0.9);
   padding: 20px;
   border-radius: 10px;
   width: 320px;
   border: 4px solid #d9292f;
+}
+
+.modo-secreto .caja-items {
+  border-color: #d4af37;
 }
 
 .bloque-interrogacion {
@@ -177,6 +201,10 @@ button {
   padding: 20px;
 }
 
+.modo-secreto .escenario {
+  border-color: #d4af37;
+}
+
 .marcador {
   display: flex;
   justify-content: space-between;
@@ -203,6 +231,19 @@ button {
 
 .estado-gameover.estado-brillante {
   filter: grayscale(1) drop-shadow(0 0 12px #fff) brightness(1.2);
+}
+
+.sprite-secreto {
+  width: min(360px, 75vw);
+  height: auto;
+}
+
+.mensaje-secreto {
+  color: #d4af37;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 0 0 8px #d4af37;
+  animation: brillo 1.2s ease-in-out infinite alternate;
 }
 
 .sprite {
@@ -257,4 +298,3 @@ button {
   }
 }
 </style>
-
